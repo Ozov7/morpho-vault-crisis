@@ -1,0 +1,16 @@
+etherem_rpc = "https://rpc.hoodi.ethpandaops.io/"
+drosera_rpc = "https://relay.hoodi.drosera.io"
+
+[traps]
+
+
+[traps.trap_0x23cAf1e14869B145d2b4Eb4B783610C9f0ce83C8]path = "You need to set the path manually to the trap's artifact file, ex: out/HelloWorldTrap.sol/HelloWorldTrap.json"
+response_contract = "25e2cef36020a736cf8a4d2cadd2ebe3940f4608"
+response_function = "respondWithDiscordName(string)"
+cooldown_period_blocks = 33
+min_number_of_operators = 1
+max_number_of_operators = 2
+block_sample_size = 10
+private_trap = true
+whitelist = ["8f381fc797caa2e1a754fcaa323deed3bbaae115"]
+address = "23caf1e14869b145d2b4eb4b783610c9f0ce83c8"
