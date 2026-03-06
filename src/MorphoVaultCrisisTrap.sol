@@ -16,7 +16,7 @@ interface IMockMorphoVault {
 contract MorphoVaultCrisisTrap is ITrap {
 
     // ⚠️ Replace with MockMorphoVault address after deployment
-    address public constant MOCK_VAULT = 0xF13E05f2002Eae3570203AeA94915Ebc000A688d;
+    address public constant MOCK_VAULT = 0x2F29A61d60e24764335B0E28459B4D56fC637B68;
 
     uint256 public constant UTILIZATION_THRESHOLD    = 90; // 90%
     uint256 public constant WITHDRAWAL_THRESHOLD     = 10; // 10% of assets

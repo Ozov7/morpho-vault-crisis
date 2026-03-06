@@ -43,8 +43,7 @@ contract MorphoVaultCrisisResponse {
     function respond(
         uint256 triggeredVectors,
         uint256 utilization
-    ) external onlyOperator {
-        emit CrisisDetected(triggeredVectors, utilization, block.timestamp);
+    ) external{        emit CrisisDetected(triggeredVectors, utilization, block.timestamp);
 
         if (mockVault != address(0)) {
             IMockMorphoVault(mockVault).pauseVault();
