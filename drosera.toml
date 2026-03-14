@@ -7,12 +7,12 @@ drosera_address = "0x91cB447BaFc6e0EA0F4Fe056F5a9b1F14bb06e5D"
 
 [traps.morpho_vault_crisis]
 path = "out/MorphoVaultCrisisTrap.sol/MorphoVaultCrisisTrap.json"
-response_contract = "0xd43820279C56cb25246457E6CDf4546170723c5E"
+response_contract = "0x17c07512e56FB5CD30ec6C9CfA391AEd130f343e"
 response_function = "respond(uint256,uint256)"
 cooldown_period_blocks = 33
 min_number_of_operators = 1
 max_number_of_operators = 3
-block_sample_size = 1
+block_sample_size = 2
 private_trap = false
 whitelist = []
 address = "0x751ecc4c5e06c8af87f5b4f9a8f937a6ec50d057"

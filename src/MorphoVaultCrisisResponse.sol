@@ -12,6 +12,12 @@ contract MorphoVaultCrisisResponse {
 
     mapping(address => bool) public authorizedOperators;
 
+    event CrisisWarning(
+        uint256 triggeredVectors,
+        uint256 utilization,
+        uint256 timestamp
+    );
+
     event CrisisDetected(
         uint256 triggeredVectors,
         uint256 utilization,
@@ -40,14 +46,27 @@ contract MorphoVaultCrisisResponse {
         authorizedOperators[operator] = status;
     }
 
+    // Fix 1 & 2: onlyOperator applied to respond()
+    // Fix 6: Tiered response — 2 vectors = warning, 3 vectors = full pause
     function respond(
         uint256 triggeredVectors,
         uint256 utilization
-    ) external{        emit CrisisDetected(triggeredVectors, utilization, block.timestamp);
+    ) external onlyOperator {
 
-        if (mockVault != address(0)) {
-            IMockMorphoVault(mockVault).pauseVault();
-            emit VaultPaused(mockVault, block.timestamp);
+        if (triggeredVectors == 2) {
+            // Medium signal: emit warning only, no pause
+            emit CrisisWarning(triggeredVectors, utilization, block.timestamp);
+            return;
+        }
+
+        if (triggeredVectors >= 3) {
+            // Strong signal: full vault pause
+            emit CrisisDetected(triggeredVectors, utilization, block.timestamp);
+            if (mockVault != address(0)) {
+                IMockMorphoVault(mockVault).pauseVault();
+                emit VaultPaused(mockVault, block.timestamp);
+            }
         }
     }
 }
+

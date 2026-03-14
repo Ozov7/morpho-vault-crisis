@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "forge-std/Script.sol";
+import {Script} from "forge-std/Script.sol";
+import {console} from "forge-std/console.sol";
 
 // ─── Mock Morpho Vault ───────────────────────────────────────────────────────
 
@@ -14,7 +15,6 @@ contract MockMorphoVault {
     uint256 public totalBorrows;
     uint256 public pendingWithdrawals;
     uint256 public currentPrice;
-    uint256 public lastPrice;
 
     event VaultPaused(uint256 timestamp);
 
@@ -26,15 +26,13 @@ contract MockMorphoVault {
     constructor() {
         owner = msg.sender;
         // Safe default state — no crisis
-        totalAssets       = 1_000_000e18;
-        totalBorrows      = 700_000e18;  // 70% utilization (safe)
-        pendingWithdrawals = 50_000e18;  // 5% withdrawal queue (safe)
-        currentPrice      = 2000e8;      // $2000
-        lastPrice         = 2000e8;      // no deviation
+        totalAssets        = 1_000_000e18;
+        totalBorrows       = 700_000e18;   // 70% utilization (safe)
+        pendingWithdrawals = 50_000e18;    // 5% withdrawal queue (safe)
+        currentPrice       = 2000e8;       // $2000
     }
 
     function getVaultData() external view returns (
-        uint256,
         uint256,
         uint256,
         uint256,
@@ -44,16 +42,15 @@ contract MockMorphoVault {
             totalAssets,
             totalBorrows,
             pendingWithdrawals,
-            currentPrice,
-            lastPrice
+            currentPrice
         );
     }
 
-    // Simulate crisis — call this to trigger the trap
+    // Simulate crisis — triggers all 3 vectors
     function simulateCrisis() external onlyOwner {
-        totalBorrows       = 950_000e18;  // 95% utilization ✓ Vector 1
-        pendingWithdrawals = 150_000e18;  // 15% withdrawal  ✓ Vector 2
-        currentPrice       = 1850e8;      // 7.5% price drop ✓ Vector 3
+        totalBorrows       = 950_000e18;  // 95% utilization  ✓ Vector 1
+        pendingWithdrawals = 150_000e18;  // 15% withdrawal   ✓ Vector 2
+        currentPrice       = 1850e8;      // 7.5% price drop  ✓ Vector 3
     }
 
     // Reset to safe state
@@ -61,7 +58,6 @@ contract MockMorphoVault {
         totalBorrows       = 700_000e18;
         pendingWithdrawals = 50_000e18;
         currentPrice       = 2000e8;
-        lastPrice          = 2000e8;
         paused             = false;
     }
 
@@ -76,14 +72,12 @@ contract MockMorphoVault {
         uint256 _totalAssets,
         uint256 _totalBorrows,
         uint256 _pendingWithdrawals,
-        uint256 _currentPrice,
-        uint256 _lastPrice
+        uint256 _currentPrice
     ) external onlyOwner {
         totalAssets        = _totalAssets;
         totalBorrows       = _totalBorrows;
         pendingWithdrawals = _pendingWithdrawals;
         currentPrice       = _currentPrice;
-        lastPrice          = _lastPrice;
     }
 }
 
@@ -99,6 +93,12 @@ contract MorphoVaultCrisisResponse {
     address public mockVault;
 
     mapping(address => bool) public authorizedOperators;
+
+    event CrisisWarning(
+        uint256 triggeredVectors,
+        uint256 utilization,
+        uint256 timestamp
+    );
 
     event CrisisDetected(
         uint256 triggeredVectors,
@@ -132,11 +132,18 @@ contract MorphoVaultCrisisResponse {
         uint256 triggeredVectors,
         uint256 utilization
     ) external onlyOperator {
-        emit CrisisDetected(triggeredVectors, utilization, block.timestamp);
 
-        if (mockVault != address(0)) {
-            IMockMorphoVault(mockVault).pauseVault();
-            emit VaultPaused(mockVault, block.timestamp);
+        if (triggeredVectors == 2) {
+            emit CrisisWarning(triggeredVectors, utilization, block.timestamp);
+            return;
+        }
+
+        if (triggeredVectors >= 3) {
+            emit CrisisDetected(triggeredVectors, utilization, block.timestamp);
+            if (mockVault != address(0)) {
+                IMockMorphoVault(mockVault).pauseVault();
+                emit VaultPaused(mockVault, block.timestamp);
+            }
         }
     }
 }
@@ -152,7 +159,7 @@ contract Deploy is Script {
         MockMorphoVault mockVault = new MockMorphoVault();
         console.log("MockMorphoVault deployed at:", address(mockVault));
 
-        // 2. Deploy Response contract, wired to MockVault
+        // 2. Deploy Response contract wired to MockVault
         MorphoVaultCrisisResponse response = new MorphoVaultCrisisResponse(
             address(mockVault)
         );
